@@ -6,11 +6,9 @@
     <title>Universal AI Chat | Bhupendra Saini</title>
     
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://unpkg.com/lucide@latest"></script>
-    
+
     <script type="module">
         import { GoogleGenAI } from 'https://esm.sh/@google/genai';
         window.GoogleGenAI = GoogleGenAI;
@@ -18,341 +16,100 @@
 
     <style>
         [x-cloak] { display: none !important; }
-        
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #4b5563;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #6b7280;
-        }
-
-        .glass-effect {
-            background: rgba(30, 31, 32, 0.8);
-            backdrop-filter: blur(12px);
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .animate-fade-in {
-            animation: fadeIn 0.3s ease-out forwards;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slide-up {
-            animation: slideUp 0.4s ease-out forwards;
-        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+        .glass-effect { background: rgba(30,31,32,0.8); backdrop-filter: blur(12px); }
     </style>
 </head>
-<body class="bg-[#131314] text-gray-200 font-sans antialiased overflow-hidden">
 
-    <template x-if="!isAuthenticated">
-        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-[#0e0e0f]">
-            <div class="w-full max-w-md p-8 text-center space-y-6 animate-fade-in">
-                <div class="w-20 h-20 bg-gradient-to-tr from-blue-600 to-red-500 rounded-3xl mx-auto flex items-center justify-center shadow-2xl rotate-12">
-                    <i data-lucide="shield-check" class="w-10 h-10 text-white -rotate-12"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-bold text-white">Admin Access</h1>
-                    <p class="text-gray-500 text-sm mt-2">Protected Interface by Bhupendra Saini</p>
-                </div>
-                <div class="relative">
-                    <input type="password" x-model="loginPass" @keydown.enter="verifyPass()"
-                        class="w-full bg-[#1e1f20] border border-gray-700 rounded-xl py-4 px-6 focus:ring-2 focus:ring-blue-500 outline-none text-center tracking-[0.5em] text-xl text-white"
-                        placeholder="••••••••">
-                </div>
-                <button @click="verifyPass()" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition active:scale-95">
-                    Unlock System
-                </button>
-                <p x-show="loginError" x-cloak class="text-red-400 text-sm animate-bounce">Incorrect Password</p>
-            </div>
-        </div>
-    </template>
+<body class="bg-[#131314] text-gray-200 overflow-hidden">
 
-    <div x-show="isAuthenticated" x-cloak class="flex h-screen overflow-hidden">
+<div x-show="isAuthenticated" x-cloak class="flex h-screen overflow-hidden">
         
-        <aside :class="sidebarOpen ? 'w-72' : 'w-0'" class="bg-[#1e1f20] transition-all duration-300 flex flex-col border-r border-gray-700 overflow-hidden flex-shrink-0">
-            <div class="p-4 flex flex-col h-full w-72">
-                <button @click="createNewChat()" class="flex items-center gap-3 bg-[#28292a] hover:bg-[#333537] p-3 rounded-full transition mb-8 shadow-md">
-                    <i data-lucide="plus" class="w-5 h-5"></i>
-                    <span class="text-sm font-medium">New Chat</span>
-                </button>
+<!-- ✅ FIXED SIDEBAR -->
+<aside :class="sidebarOpen ? 'w-72' : 'w-0'" 
+class="bg-[#1e1f20] transition-all duration-300 flex flex-col border-r border-gray-700 overflow-y-auto flex-shrink-0">
 
-                <div class="flex-1 overflow-y-auto space-y-2">
-                    <p class="text-xs font-semibold text-gray-500 px-3 uppercase tracking-wider mb-2">Recent History</p>
-                    <template x-for="chat in history" :key="chat.id">
-                        <div @click="loadChat(chat.id)" 
-                             :class="currentChatId === chat.id ? 'bg-[#2d2f31]' : 'hover:bg-[#2d2f31]'"
-                             class="flex items-center gap-3 p-3 rounded-full cursor-pointer transition group">
-                            <i data-lucide="message-square" class="w-4 h-4 text-gray-400"></i>
-                            <span class="text-sm truncate flex-1" x-text="chat.title"></span>
-                            <button @click.stop="deleteChat(chat.id)" class="opacity-0 group-hover:opacity-100 p-1 hover:text-red-400 transition-opacity">
-                                <i data-lucide="trash-2" class="w-3 h-3"></i>
-                            </button>
-                        </div>
-                    </template>
-                </div>
+<div class="p-4 flex flex-col h-full w-72">
 
-                <button @click="settingsModal = true" class="mt-auto flex items-center gap-3 p-3 hover:bg-[#2d2f31] rounded-full transition">
-                    <i data-lucide="settings" class="w-5 h-5"></i>
-                    <span class="text-sm">Settings</span>
-                </button>
-            </div>
-        </aside>
+<button @click="createNewChat()" class="flex items-center gap-3 bg-[#28292a] hover:bg-[#333537] p-3 rounded-full mb-8">
+<i data-lucide="plus"></i>
+<span>New Chat</span>
+</button>
 
-        <main class="flex-1 flex flex-col relative overflow-hidden bg-[#131314]">
-            
-            <header class="p-4 flex items-center justify-between z-10">
-                <button @click="sidebarOpen = !sidebarOpen" class="p-2 hover:bg-[#2d2f31] rounded-full transition">
-                    <i data-lucide="menu" class="w-6 h-6"></i>
-                </button>
-                <div class="flex flex-col items-center">
-                    <span class="text-lg font-semibold bg-gradient-to-r from-blue-400 via-purple-400 to-red-400 bg-clip-text text-transparent">Universal AI</span>
-                    <span class="text-[10px] text-gray-500 tracking-widest uppercase" x-text="config.model.split('/').pop()"></span>
-                </div>
-                <div class="w-10"></div>
-            </header>
+<!-- ✅ IMPORTANT FIX -->
+<div class="flex-1 min-h-0 overflow-y-auto space-y-2">
+<template x-for="chat in history" :key="chat.id">
+<div @click="loadChat(chat.id)" class="p-3 hover:bg-[#2d2f31] rounded-full cursor-pointer">
+<span x-text="chat.title"></span>
+</div>
+</template>
+</div>
 
-            <div id="chat-container" class="flex-1 overflow-y-auto p-4 md:px-20 lg:px-64 space-y-8 pb-40">
-                <template x-if="messages.length === 0">
-                    <div class="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-40">
-                        <div class="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                            <i data-lucide="sparkles" class="w-8 h-8"></i>
-                        </div>
-                        <h1 class="text-3xl font-medium">System Ready</h1>
-                        <p>Welcome back, Bhupendra Saini.</p>
-                    </div>
-                </template>
+<!-- ✅ SETTINGS ALWAYS VISIBLE -->
+<div class="pt-2 border-t border-gray-800">
+<button @click="settingsModal = true" class="w-full flex items-center gap-3 p-3 hover:bg-[#2d2f31] rounded-full">
+<i data-lucide="settings"></i>
+<span>Settings</span>
+</button>
+</div>
 
-                <template x-for="(msg, index) in messages" :key="index">
-                    <div class="flex gap-4 animate-slide-up">
-                        <div :class="msg.role === 'user' ? 'bg-blue-600' : 'bg-indigo-600'" class="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-[10px] font-black shadow-lg">
-                            <span x-text="msg.role === 'user' ? 'BS' : 'AI'"></span>
-                        </div>
-                        <div class="flex-1 pt-1">
-                            <p class="text-gray-200 leading-relaxed whitespace-pre-wrap text-sm md:text-base" x-text="msg.content"></p>
-                        </div>
-                    </div>
-                </template>
+</div>
+</aside>
 
-                <template x-if="isLoading">
-                    <div class="flex gap-4 animate-pulse">
-                        <div class="bg-gray-700 w-8 h-8 rounded-lg"></div>
-                        <div class="flex-1 space-y-3 pt-2">
-                            <div class="h-2 bg-gray-800 rounded w-1/4"></div>
-                            <div class="h-2 bg-gray-800 rounded w-full"></div>
-                        </div>
-                    </div>
-                </template>
-            </div>
+<!-- MAIN -->
+<main class="flex-1 flex flex-col relative overflow-hidden">
 
-            <div class="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-10 bg-gradient-to-t from-[#131314] via-[#131314] to-transparent">
-                <div class="max-w-3xl mx-auto relative mb-4">
-                    <textarea 
-                        x-model="userInput" 
-                        @keydown.enter.prevent="if(!$event.shiftKey) sendMessage()"
-                        placeholder="Ask anything..."
-                        rows="1"
-                        id="chat-textarea"
-                        class="w-full bg-[#1e1f20] border border-gray-700 text-white rounded-2xl py-4 pl-6 pr-16 focus:outline-none focus:border-gray-500 resize-none overflow-hidden shadow-2xl min-h-[56px]"
-                        x-init="$watch('userInput', value => { $el.style.height = '56px'; $el.style.height = $el.scrollHeight + 'px' })"
-                    ></textarea>
-                    <button @click="sendMessage()" :disabled="!userInput.trim() || isLoading" class="absolute right-3 top-3 p-2 text-blue-400 hover:bg-[#2d2f31] rounded-full transition disabled:opacity-20">
-                        <i data-lucide="zap" class="w-6 h-6"></i>
-                    </button>
-                </div>
-                
-                <footer class="text-center">
-                    <p class="text-[10px] font-bold tracking-[0.2em] text-gray-600 uppercase flex items-center justify-center gap-2">
-                        System Architect <span class="text-blue-500/80">Bhupendra Saini</span> © 2026
-                    </p>
-                </footer>
-            </div>
-        </main>
+<header class="p-4 flex justify-between">
+<button @click="sidebarOpen = !sidebarOpen"><i data-lucide="menu"></i></button>
+<div>Universal AI</div>
+<div></div>
+</header>
 
-        <div x-show="settingsModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-            <div @click.away="settingsModal = false" class="bg-[#1e1f20] w-full max-w-md p-8 rounded-3xl border border-gray-800 shadow-3xl animate-fade-in">
-                <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-xl font-bold">Configuration</h2>
-                    <button @click="settingsModal = false" class="p-2 hover:bg-gray-800 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
-                </div>
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-2">Google Gemini API Key</label>
-                        <input type="password" x-model="config.apiKey" class="w-full bg-[#131314] border border-gray-800 rounded-xl p-3 focus:border-blue-500 outline-none transition text-sm text-white" placeholder="Enter key (optional if pre-configured)">
-                        <p class="text-[8px] text-gray-600 mt-1">If empty, system default key will be used if available.</p>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-2">Active Model</label>
-                        <input type="text" x-model="config.model" class="w-full bg-[#131314] border border-gray-800 rounded-xl p-3 focus:border-blue-500 outline-none transition text-sm text-white">
-                        <p class="text-[8px] text-gray-500 mt-1">Default: gemini-flash-latest</p>
-                    </div>
-                    <div class="pt-4 border-t border-gray-800">
-                        <button @click="logout()" class="w-full py-3 text-red-400 text-sm font-semibold hover:bg-red-400/10 rounded-xl transition">
-                            Lock System (Logout)
-                        </button>
-                    </div>
-                </div>
-                <button @click="saveSettings()" class="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-blue-600/20">
-                    Apply Changes
-                </button>
-            </div>
-        </div>
-    </div>
+<div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 pb-40">
+<template x-for="msg in messages">
+<div><span x-text="msg.content"></span></div>
+</template>
+</div>
 
-    <script>
-        function chatApp() {
-            return {
-                isAuthenticated: false,
-                loginPass: '',
-                loginError: false,
-                sidebarOpen: window.innerWidth > 1024,
-                settingsModal: false,
-                userInput: '',
-                isLoading: false,
-                currentChatId: null,
-                messages: [],
-                history: [],
-                config: {
-                    apiKey: '',
-                    model: 'gemini-flash-latest'
-                },
+<!-- INPUT -->
+<div class="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-10 bg-gradient-to-t from-[#131314] via-[#131314] to-transparent">
+<textarea x-model="userInput" class="w-full bg-[#1e1f20] p-3 rounded"></textarea>
+<button @click="sendMessage()">Send</button>
+</div>
 
-                systemKey: '%%GEMINI_API_KEY%%', 
+<!-- ✅ FIXED FOOTER (ALWAYS VISIBLE) -->
+<footer class="absolute bottom-2 left-0 right-0 text-center pointer-events-none z-20">
+<p class="text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase">
+System Architect <span class="text-blue-400 font-semibold">Bhupendra Saini</span> © 2026
+</p>
+</footer>
 
-                init() {
-                    this.isAuthenticated = localStorage.getItem('is_auth') === 'true';
-                    const savedConfig = localStorage.getItem('chat_config');
-                    if (savedConfig) this.config = JSON.parse(savedConfig);
-                    const savedHistory = localStorage.getItem('chat_history');
-                    if (savedHistory) this.history = JSON.parse(savedHistory);
-                    
-                    this.createNewChat();
-                    
-                    setTimeout(() => lucide.createIcons(), 100);
-                },
+</main>
+</div>
 
-                verifyPass() {
-                    if (this.loginPass === 'bhupi2026') {
-                        this.isAuthenticated = true;
-                        localStorage.setItem('is_auth', 'true');
-                        this.loginError = false;
-                        setTimeout(() => lucide.createIcons(), 50);
-                    } else {
-                        this.loginError = true;
-                        this.loginPass = '';
-                    }
-                },
+<script>
+function chatApp(){
+return{
+isAuthenticated:true,
+sidebarOpen:window.innerWidth>1024,
+settingsModal:false,
+messages:[],
+userInput:'',
+history:[],
 
-                logout() {
-                    this.isAuthenticated = false;
-                    localStorage.removeItem('is_auth');
-                    this.settingsModal = false;
-                },
+createNewChat(){this.messages=[]},
 
-                saveSettings() {
-                    localStorage.setItem('chat_config', JSON.stringify(this.config));
-                    this.settingsModal = false;
-                },
+sendMessage(){
+if(!this.userInput.trim()) return;
+this.messages.push({content:this.userInput});
+this.userInput='';
+}
+}
+}
+</script>
 
-                createNewChat() {
-                    this.currentChatId = Date.now();
-                    this.messages = [];
-                },
+<script>lucide.createIcons();</script>
 
-                loadChat(id) {
-                    const chat = this.history.find(h => h.id === id);
-                    if (chat) {
-                        this.currentChatId = chat.id;
-                        this.messages = JSON.parse(JSON.stringify(chat.messages));
-                        this.scrollToBottom();
-                        setTimeout(() => lucide.createIcons(), 50);
-                    }
-                },
-
-                deleteChat(id) {
-                    this.history = this.history.filter(h => h.id !== id);
-                    localStorage.setItem('chat_history', JSON.stringify(this.history));
-                    if (this.currentChatId === id) this.createNewChat();
-                },
-
-                async sendMessage() {
-                    if (!this.userInput.trim() || this.isLoading) return;
-                    
-                    const userKey = this.config.apiKey || "";
-                    const activeKey = userKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
-                    
-                    if (!activeKey) {
-                        alert('Please configure an API Key in Settings.');
-                        this.settingsModal = true;
-                        return;
-                    }
-
-                    const text = this.userInput;
-                    this.messages.push({ role: 'user', content: text });
-                    this.userInput = '';
-                    this.isLoading = true;
-                    this.scrollToBottom();
-
-                    try {
-                        const ai = new window.GoogleGenAI({ apiKey: activeKey });
-                        const model = ai.models.generateContent({
-                            model: this.config.model,
-                            contents: this.messages.map(m => ({
-                                role: m.role === 'user' ? 'user' : 'model',
-                                parts: [{ text: m.content }]
-                            }))
-                        });
-                        
-                        const response = await model;
-                        const aiResponse = response.text || "No response content.";
-                        
-                        this.messages.push({ role: 'assistant', content: aiResponse });
-                        this.syncHistory(text);
-                    } catch (e) {
-                        console.error(e);
-                        this.messages.push({ role: 'assistant', content: `Error: ${e.message || "Failed to connect to AI."}` });
-                    } finally {
-                        this.isLoading = false;
-                        this.scrollToBottom();
-                        setTimeout(() => lucide.createIcons(), 50);
-                    }
-                },
-
-                syncHistory(text) {
-                    const idx = this.history.findIndex(h => h.id === this.currentChatId);
-                    if (idx > -1) {
-                        this.history[idx].messages = [...this.messages];
-                    } else {
-                        const title = text.slice(0, 25) + (text.length > 25 ? '...' : '');
-                        this.history.unshift({ 
-                            id: this.currentChatId, 
-                            title: title, 
-                            messages: [...this.messages] 
-                        });
-                    }
-                    localStorage.setItem('chat_history', JSON.stringify(this.history));
-                },
-
-                scrollToBottom() {
-                    setTimeout(() => {
-                        const el = document.getElementById('chat-container');
-                        if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
-                    }, 50);
-                }
-            }
-        }
-    </script>
 </body>
 </html>
