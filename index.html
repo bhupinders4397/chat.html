@@ -3,142 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Universal AI Chat (OpenRouter)</title>
+<title>Universal AI Chat</title>
 
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 
-<!-- Markdown -->
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script type="module">
+import { GoogleGenAI } from 'https://esm.sh/@google/genai';
+window.GoogleGenAI = GoogleGenAI;
+</script>
 
 <style>
-[x-cloak]{display:none!important;}
-
-body{
-background:#0f0f10;
-color:#e5e7eb;
-font-family:system-ui;
-}
-
-.glass{
-background:rgba(30,31,32,0.75);
-backdrop-filter:blur(14px);
-}
-
-.msg{
-animation:fade .2s ease;
-}
-
-@keyframes fade{
-from{opacity:0;transform:translateY(6px)}
-to{opacity:1;transform:translateY(0)}
-}
-
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-thumb{background:#444;border-radius:10px}
+[x-cloak] { display:none !important; }
+body { background:#131314; }
 </style>
 </head>
 
-<body>
+<body class="text-gray-200 overflow-hidden">
 
-<div class="flex h-screen">
+<div x-show="isAuthenticated" x-cloak class="flex h-screen">
+
+<!-- BACKDROP -->
+<div 
+    x-show="sidebarOpen" 
+    x-transition.opacity
+    @click="sidebarOpen = false"
+    class="fixed inset-0 bg-black/50 z-30 lg:hidden">
+</div>
 
 <!-- SIDEBAR -->
-<aside class="w-72 bg-[#1e1f20] border-r border-gray-800 flex flex-col">
+<aside
+    x-show="sidebarOpen || window.innerWidth >= 1024"
+    x-transition
+    class="fixed lg:static z-40 w-72 h-full bg-[#1e1f20] border-r border-gray-700 flex flex-col"
+>
+    <div class="p-4 flex flex-col h-full">
 
-<div class="p-4">
+        <!-- New Chat -->
+        <button @click="createNewChat(); if(window.innerWidth<1024) sidebarOpen=false"
+            class="flex items-center gap-3 bg-[#28292a] hover:bg-[#333537] p-3 rounded-full mb-6">
+            <i data-lucide="plus"></i>
+            <span>New Chat</span>
+        </button>
 
-<button @click="createNewChat()"
-class="w-full flex items-center gap-2 bg-[#2a2b2d] p-3 rounded-xl mb-4">
-<i data-lucide="plus"></i> New Chat
-</button>
+        <!-- History -->
+        <div class="flex-1 overflow-y-auto space-y-2">
 
-</div>
+            <p class="text-xs text-gray-500 px-3">Recent</p>
 
-<div class="flex-1 overflow-y-auto px-2">
+            <template x-if="history.length===0">
+                <p class="text-xs text-gray-500 px-3">No chats yet</p>
+            </template>
 
-<template x-for="chat in history" :key="chat.id">
-<div @click="loadChat(chat.id)"
-class="p-2 rounded hover:bg-[#2d2f31] cursor-pointer text-sm truncate"
-x-text="chat.title"></div>
-</template>
+            <template x-for="chat in history.slice(0,50)" :key="chat.id">
+                <div @click="loadChat(chat.id); if(window.innerWidth<1024) sidebarOpen=false"
+                    :class="currentChatId===chat.id ? 'bg-[#2d2f31]' : ''"
+                    class="flex items-center gap-3 p-3 rounded-full hover:bg-[#2d2f31] cursor-pointer group">
 
-</div>
+                    <i data-lucide="message-square" class="w-4 h-4"></i>
 
+                    <span class="flex-1 truncate" x-text="chat.title"></span>
+
+                    <button @click.stop="deleteChat(chat.id)"
+                        class="opacity-0 group-hover:opacity-100">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </template>
+        </div>
+
+        <!-- Bottom -->
+        <div class="pt-3 border-t border-gray-800">
+
+            <button @click="settingsModal=true"
+                class="flex items-center gap-3 p-3 hover:bg-[#2d2f31] rounded-full w-full">
+                <i data-lucide="settings"></i>
+                <span>Settings</span>
+            </button>
+
+            <button @click="history=[];localStorage.removeItem('chat_history')"
+                class="flex items-center gap-3 p-3 text-red-400 hover:bg-red-500/10 rounded-full w-full">
+                <i data-lucide="trash"></i>
+                Clear Chats
+            </button>
+
+        </div>
+    </div>
 </aside>
 
 <!-- MAIN -->
 <main class="flex-1 flex flex-col">
 
-<!-- HEADER -->
-<header class="p-3 flex justify-between items-center border-b border-gray-800">
-
-<h1 class="font-bold">OpenRouter AI</h1>
-
-<select x-model="config.model"
-class="bg-[#1e1f20] border border-gray-700 p-2 rounded text-xs">
-
-<option value="openai/gpt-4o-mini">GPT-4o Mini</option>
-<option value="openai/gpt-4o">GPT-4o</option>
-<option value="anthropic/claude-3.5-sonnet">Claude 3.5</option>
-<option value="google/gemini-1.5-pro">Gemini Pro</option>
-
-</select>
-
+<header class="p-4 flex justify-between">
+<button @click="sidebarOpen=!sidebarOpen">
+<i data-lucide="menu"></i>
+</button>
+<h1>Universal AI</h1>
+<div></div>
 </header>
 
-<!-- CHAT -->
-<div id="chat" class="flex-1 overflow-y-auto p-6 space-y-4">
+<div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4">
 
-<template x-for="(msg,i) in messages" :key="i">
-<div class="msg flex gap-3 group">
-
-<div class="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-xs">
-<span x-text="msg.role==='user'?'U':'AI'"></span>
-</div>
-
-<div class="flex-1 relative">
-
-<button @click="copy(msg.content)"
-class="opacity-0 group-hover:opacity-100 absolute right-2 top-2 text-xs bg-[#2d2f31] px-2 py-1 rounded">
-Copy
-</button>
-
-<div class="glass p-4 rounded-xl text-sm"
-x-html="render(msg.content)">
-</div>
-
-</div>
-
+<template x-for="msg in messages">
+<div>
+<strong x-text="msg.role"></strong>:
+<span x-text="msg.content"></span>
 </div>
 </template>
 
-<template x-if="isLoading">
-<div class="text-gray-500 text-sm">Streaming...</div>
-</template>
-
 </div>
 
-<!-- INPUT -->
-<div class="p-4 border-t border-gray-800">
-
-<div class="max-w-3xl mx-auto relative">
-
-<textarea
-x-model="input"
-@keydown.enter.prevent="send()"
-placeholder="Ask anything..."
-class="w-full bg-[#1e1f20] p-4 pr-12 rounded-xl resize-none"
-rows="1"></textarea>
-
-<button @click="send()"
-class="absolute right-3 top-3 text-blue-400">
-<i data-lucide="send"></i>
-</button>
-
-</div>
-
+<div class="p-4">
+<input x-model="userInput" @keydown.enter="sendMessage()" class="w-full p-3 bg-gray-800 rounded">
 </div>
 
 </main>
@@ -148,136 +125,85 @@ class="absolute right-3 top-3 text-blue-400">
 <script>
 function chatApp(){
 return{
-
-input:'',
+isAuthenticated:true,
+sidebarOpen:true,
 messages:[],
 history:[],
-isLoading:false,
-
-config:{
-openRouterKey:'',
-model:'openai/gpt-4o-mini'
-},
+currentChatId:null,
+userInput:'',
+settingsModal:false,
+config:{apiKey:'',model:'gemini-flash-latest'},
 
 init(){
-const h=localStorage.getItem('history');
-if(h) this.history=JSON.parse(h);
+this.sidebarOpen = window.innerWidth>=1024;
+
+window.addEventListener('resize',()=>{
+if(window.innerWidth>=1024) this.sidebarOpen=true;
+});
+
+const h = localStorage.getItem('chat_history');
+if(h) this.history = JSON.parse(h);
+
 this.createNewChat();
+
 setTimeout(()=>lucide.createIcons(),100);
 },
 
 createNewChat(){
-this.currentId=Date.now();
+this.currentChatId = Date.now();
 this.messages=[];
 },
 
 loadChat(id){
-const c=this.history.find(x=>x.id===id);
+const c = this.history.find(x=>x.id===id);
 if(c){
-this.currentId=id;
+this.currentChatId=id;
 this.messages=[...c.messages];
 }
 },
 
-copy(text){
-navigator.clipboard.writeText(text);
+deleteChat(id){
+this.history=this.history.filter(x=>x.id!==id);
+localStorage.setItem('chat_history',JSON.stringify(this.history));
 },
 
-render(text){
-try{
-return marked.parse(text||'');
-}catch{
-return text;
-}
-},
+async sendMessage(){
+if(!this.userInput.trim()) return;
 
-async send(){
-
-if(!this.input.trim()||this.isLoading) return;
-
-const text=this.input;
+const text=this.userInput;
 this.messages.push({role:'user',content:text});
-this.input='';
-
-const aiMsg={role:'assistant',content:''};
-this.messages.push(aiMsg);
-
-this.isLoading=true;
+this.userInput='';
 
 try{
-
-const res=await fetch("https://openrouter.ai/api/v1/chat/completions",{
-method:"POST",
-headers:{
-"Authorization":"Bearer "+this.config.openRouterKey,
-"Content-Type":"application/json",
-"HTTP-Referer":window.location.href,
-"X-Title":"AI Chat"
-},
-body:JSON.stringify({
+const ai=new window.GoogleGenAI({apiKey:this.config.apiKey});
+const res=await ai.models.generateContent({
 model:this.config.model,
-messages:this.messages.map(m=>({
-role:m.role,
-content:m.content
-})),
-stream:true
-})
+contents:[{role:'user',parts:[{text}]}]
 });
-
-const reader=res.body.getReader();
-const decoder=new TextDecoder();
-
-let buffer="";
-
-while(true){
-const {value,done}=await reader.read();
-if(done) break;
-
-buffer+=decoder.decode(value,{stream:true});
-const lines=buffer.split("\n");
-buffer=lines.pop();
-
-for(let line of lines){
-if(!line.includes("data:")) continue;
-
-const json=line.replace("data:","").trim();
-if(json==="[DONE]") break;
-
-try{
-const obj=JSON.parse(json);
-const token=obj.choices?.[0]?.delta?.content;
-if(token){
-aiMsg.content+=token;
-}
-}catch(e){}
-}
-}
-
-this.sync(text);
-
+this.messages.push({role:'assistant',content:res.text});
+this.syncHistory(text);
 }catch(e){
-aiMsg.content="Error: "+e.message;
+this.messages.push({role:'assistant',content:'Error'});
 }
 
-this.isLoading=false;
-
-this.$nextTick(()=>{
-const el=document.getElementById("chat");
-el.scrollTop=el.scrollHeight;
-});
-
+setTimeout(()=>lucide.createIcons(),50);
 },
 
-sync(text){
+syncHistory(text){
+const idx=this.history.findIndex(x=>x.id===this.currentChatId);
+
+if(idx>-1){
+this.history[idx].messages=[...this.messages];
+}else{
 this.history.unshift({
-id:this.currentId,
+id:this.currentChatId,
 title:text.slice(0,20),
 messages:[...this.messages]
 });
-
-localStorage.setItem("history",JSON.stringify(this.history));
 }
 
+localStorage.setItem('chat_history',JSON.stringify(this.history));
+}
 }
 }
 </script>
