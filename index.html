@@ -122,28 +122,28 @@
                 </template>
             </div>
 
-            <div class="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-10 bg-gradient-to-t from-[#131314] via-[#131314] to-transparent">
-                <div class="max-w-3xl mx-auto relative mb-4">
-                    <textarea 
-                        x-model="userInput" 
-                        @keydown.enter.prevent="if(!$event.shiftKey) sendMessage()"
-                        placeholder="Ask anything..."
-                        rows="1"
-                        id="chat-textarea"
-                        class="w-full bg-[#1e1f20] border border-gray-700 text-white rounded-2xl py-4 pl-6 pr-16 focus:outline-none focus:border-gray-500 resize-none overflow-hidden shadow-2xl min-h-[56px]"
-                        x-init="$watch('userInput', value => { $el.style.height = '56px'; $el.style.height = $el.scrollHeight + 'px' })"
-                    ></textarea>
-                    <button @click="sendMessage()" :disabled="!userInput.trim() || isLoading" class="absolute right-3 top-3 p-2 text-blue-400 hover:bg-[#2d2f31] rounded-full transition disabled:opacity-20">
-                        <i data-lucide="zap" class="w-6 h-6"></i>
-                    </button>
-                </div>
-                
-                <footer class="text-center">
-                    <p class="text-[10px] font-bold tracking-[0.2em] text-gray-600 uppercase flex items-center justify-center gap-2">
-                        System Architect <span class="text-blue-500/80">Bhupendra Saini</span> © 2026
-                    </p>
-                </footer>
-            </div>
+            <div class="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-10 bg-gradient-to-t from-[#131314] via-[#131314] to-transparent flex flex-col">
+    <div class="max-w-3xl mx-auto relative mb-4 w-full">
+        <textarea 
+            x-model="userInput" 
+            @keydown.enter.prevent="if(!$event.shiftKey) sendMessage()"
+            placeholder="Ask anything..."
+            rows="1"
+            id="chat-textarea"
+            class="w-full bg-[#1e1f20] border border-gray-700 text-white rounded-2xl py-4 pl-6 pr-16 focus:outline-none focus:border-gray-500 resize-none overflow-hidden shadow-2xl min-h-[56px]"
+            x-init="$watch('userInput', value => { $el.style.height = '56px'; $el.style.height = $el.scrollHeight + 'px' })"
+        ></textarea>
+        <button @click="sendMessage()" :disabled="!userInput.trim() || isLoading" class="absolute right-3 top-3 p-2 text-blue-400 hover:bg-[#2d2f31] rounded-full transition disabled:opacity-20">
+            <i data-lucide="zap" class="w-6 h-6"></i>
+        </button>
+    </div>
+    
+    <footer class="text-center mt-2">
+        <p class="text-[10px] font-bold tracking-[0.2em] text-gray-600 uppercase flex items-center justify-center gap-2">
+            System Architect <span class="text-blue-500/80">Bhupendra Saini</span> © 2026
+        </p>
+    </footer>
+</div>
         </main>
 
         <div x-show="settingsModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
