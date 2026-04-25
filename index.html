@@ -279,29 +279,58 @@
                     this.scrollToBottom();
 
                     try {
-                        const ai = new window.GoogleGenAI({ apiKey: activeKey });
-                        const model = ai.models.generateContent({
-                            model: this.config.model,
-                            contents: this.messages.map(m => ({
-                                role: m.role === 'user' ? 'user' : 'model',
-                                parts: [{ text: m.content }]
-                            }))
-                        });
-                        
-                        const response = await model;
-                        const aiResponse = response.text || "No response content.";
-                        
-                        this.messages.push({ role: 'assistant', content: aiResponse });
-                        this.syncHistory(text);
-                    } catch (e) {
-                        console.error(e);
-                        this.messages.push({ role: 'assistant', content: `Error: ${e.message || "Failed to connect to AI."}` });
-                    } finally {
-                        this.isLoading = false;
-                        this.scrollToBottom();
-                        setTimeout(() => lucide.createIcons(), 50);
-                    }
-                },
+    let aiResponse = "";
+
+    // ✅ Auto-detect OpenRouter key
+    const isOpenRouter = activeKey.startsWith("sk-or-");
+
+    if (isOpenRouter) {
+        // 🔹 OpenRouter API
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${activeKey}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: this.config.model, // no need for prefix now
+                messages: this.messages.map(m => ({
+                    role: m.role === 'assistant' ? 'assistant' : 'user',
+                    content: m.content
+                }))
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.error) throw new Error(data.error.message);
+
+        aiResponse = data.choices?.[0]?.message?.content || "No response.";
+    } else {
+        // 🔹 Google Gemini (default)
+        const ai = new window.GoogleGenAI({ apiKey: activeKey });
+
+        const response = await ai.models.generateContent({
+            model: this.config.model,
+            contents: this.messages.map(m => ({
+                role: m.role === 'user' ? 'user' : 'model',
+                parts: [{ text: m.content }]
+            }))
+        });
+
+        aiResponse = response.text || "No response content.";
+    }
+
+    this.messages.push({ role: 'assistant', content: aiResponse });
+    this.syncHistory(text);
+
+} catch (e) {
+    console.error(e);
+    this.messages.push({
+        role: 'assistant',
+        content: `Error: ${e.message || "Failed to connect."}`
+    });
+}
 
                 syncHistory(text) {
                     const idx = this.history.findIndex(h => h.id === this.currentChatId);
