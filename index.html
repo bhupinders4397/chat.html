@@ -6,9 +6,7 @@
     <title>Universal AI Chat | Bhupendra Saini</title>
     
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <script type="module">
@@ -19,40 +17,18 @@
     <style>
         [x-cloak] { display: none !important; }
         
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #4b5563;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #6b7280;
-        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
-        .glass-effect {
-            background: rgba(30, 31, 32, 0.8);
-            backdrop-filter: blur(12px);
-        }
+        .glass-effect { background: rgba(30, 31, 32, 0.8); backdrop-filter: blur(12px); }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .animate-fade-in {
-            animation: fadeIn 0.3s ease-out forwards;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-slide-up {
-            animation: slideUp 0.4s ease-out forwards;
-        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
     </style>
 </head>
 <body class="bg-[#131314] text-gray-200 font-sans antialiased overflow-hidden">
@@ -82,9 +58,9 @@
 
     <div x-show="isAuthenticated" x-cloak class="flex h-screen overflow-hidden">
         
-        <aside :class="sidebarOpen ? 'w-72' : 'w-0'" class="bg-[#1e1f20] transition-all duration-300 flex flex-col border-r border-gray-700 overflow-hidden flex-shrink-0">
-            <div class="p-4 flex flex-col min-h-full w-72">
-                <button @click="createNewChat()" class="flex items-center gap-3 bg-[#28292a] hover:bg-[#333537] p-3 rounded-full transition mb-8 shadow-md">
+        <aside :class="sidebarOpen ? 'w-72' : 'w-0'" class="bg-[#1e1f20] transition-all duration-300 flex flex-col border-r border-gray-700 flex-shrink-0 h-screen overflow-y-auto">
+            <div class="p-4 flex flex-col min-h-screen w-72">
+                <button @click="createNewChat()" class="flex-shrink-0 flex items-center gap-3 bg-[#28292a] hover:bg-[#333537] p-3 rounded-full transition mb-8 shadow-md">
                     <i data-lucide="plus" class="w-5 h-5"></i>
                     <span class="text-sm font-medium">New Chat</span>
                 </button>
@@ -104,7 +80,7 @@
                     </template>
                 </div>
 
-                <button @click="settingsModal = true" class="mt-auto flex items-center gap-3 p-3 hover:bg-[#2d2f31] rounded-full transition">
+                <button @click="settingsModal = true" class="mt-4 flex-shrink-0 flex items-center gap-3 p-3 hover:bg-[#2d2f31] rounded-full transition">
                     <i data-lucide="settings" class="w-5 h-5"></i>
                     <span class="text-sm">Settings</span>
                 </button>
@@ -229,8 +205,6 @@
                     model: 'gemini-flash-latest'
                 },
 
-                systemKey: '%%GEMINI_API_KEY%%', 
-
                 init() {
                     this.isAuthenticated = localStorage.getItem('is_auth') === 'true';
                     const savedConfig = localStorage.getItem('chat_config');
@@ -239,7 +213,6 @@
                     if (savedHistory) this.history = JSON.parse(savedHistory);
                     
                     this.createNewChat();
-                    
                     setTimeout(() => lucide.createIcons(), 100);
                 },
 
